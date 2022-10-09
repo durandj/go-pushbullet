@@ -14,7 +14,7 @@ Documentation available under: http://godoc.org/github.com/durandj/go-pushbullet
 
 ### Install ###
 
-	go get "github.com/durandj/go-pushbullet"
+	go get "github.com/durandj/go-pushbullet/v2"
 
 ### Example ###
 

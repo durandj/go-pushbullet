@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/durandj/go-pushbullet"
+	"github.com/durandj/go-pushbullet/v2"
 )
 
 // Config is the PushBullet configuration.

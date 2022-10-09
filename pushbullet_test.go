@@ -8,7 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var mockDevice = &Device{
@@ -126,17 +126,17 @@ func PushbulletErrResponseStub() *httptest.Server {
 
 func TestNew(t *testing.T) {
 	pb := New(apiKey)
-	assert.Equal(t, apiKey, pb.Key)
+	require.Equal(t, apiKey, pb.Key)
 }
 
 func TestNewWithClient(t *testing.T) {
 	c := &http.Client{}
 	pb := NewWithClient(apiKey, c)
-	assert.Equal(t, c, pb.Client)
+	require.Equal(t, c, pb.Client)
 }
 
 func TestError(t *testing.T) {
-	assert.Equal(t, mockError.Message, mockError.Error())
+	require.Equal(t, mockError.Message, mockError.Error())
 }
 
 func TestBuildRequest(t *testing.T) {
@@ -146,8 +146,8 @@ func TestBuildRequest(t *testing.T) {
 	_, _ = buf.ReadFrom(req.Body)
 	var note Note
 	_ = json.Unmarshal(buf.Bytes(), &note)
-	assert.Equal(t, "POST", req.Method)
-	assert.Equal(t, mockNote, &note)
+	require.Equal(t, "POST", req.Method)
+	require.Equal(t, mockNote, &note)
 }
 
 func TestDevices(t *testing.T) {
@@ -156,10 +156,10 @@ func TestDevices(t *testing.T) {
 	pb := New(apiKey)
 	pb.Endpoint.URL = server.URL
 	mockDevice.Client = pb
-	devs, err := pb.Devices()
-	assert.NoError(t, err)
-	assert.Len(t, devs, 1)
-	assert.Equal(t, mockDevice, devs[0])
+	devices, err := pb.Devices()
+	require.NoError(t, err)
+	require.Len(t, devices, 1)
+	require.Equal(t, mockDevice, devices[0])
 }
 
 func TestDeviceWithNickname(t *testing.T) {
@@ -168,9 +168,9 @@ func TestDeviceWithNickname(t *testing.T) {
 	pb := New(apiKey)
 	pb.Endpoint.URL = server.URL
 	dev, err := pb.Device(mockDevice.Nickname)
-	assert.NoError(t, err)
-	assert.Equal(t, mockDevice.Nickname, dev.Nickname)
-	assert.Equal(t, pb, dev.Client)
+	require.NoError(t, err)
+	require.Equal(t, mockDevice.Nickname, dev.Nickname)
+	require.Equal(t, pb, dev.Client)
 }
 
 func TestDeviceWithNicknameMissing(t *testing.T) {
@@ -179,8 +179,8 @@ func TestDeviceWithNicknameMissing(t *testing.T) {
 	pb := New(apiKey)
 	pb.Endpoint.URL = server.URL
 	dev, err := pb.Device("MISSING")
-	assert.Error(t, err)
-	assert.Nil(t, dev)
+	require.Error(t, err)
+	require.Nil(t, dev)
 }
 
 func TestDevicePushNote(t *testing.T) {
@@ -190,7 +190,7 @@ func TestDevicePushNote(t *testing.T) {
 	pb.Endpoint.URL = server.URL
 	dev, _ := pb.Device(mockDevice.Nickname)
 	err := dev.PushNote(mockNote.Title, mockNote.Body)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestDevicePushLink(t *testing.T) {
@@ -200,7 +200,7 @@ func TestDevicePushLink(t *testing.T) {
 	pb.Endpoint.URL = server.URL
 	dev, _ := pb.Device(mockDevice.Nickname)
 	err := dev.PushLink(mockLink.Title, mockLink.URL, mockLink.Body)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestDevicePushSMS(t *testing.T) {
@@ -210,7 +210,7 @@ func TestDevicePushSMS(t *testing.T) {
 	pb.Endpoint.URL = server.URL
 	dev, _ := pb.Device(mockDevice.Nickname)
 	err := dev.PushSMS(mockSMS.TargetDeviceIden, mockSMS.ConversationIden, mockSMS.Message)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestDevicesError(t *testing.T) {
@@ -218,10 +218,10 @@ func TestDevicesError(t *testing.T) {
 	defer server.Close()
 	pb := New(apiKey)
 	pb.Endpoint.URL = server.URL
-	devs, err := pb.Devices()
-	assert.Error(t, err)
-	assert.Len(t, devs, 0)
-	assert.Equal(t, "500 Internal Server Error", err.Error())
+	devices, err := pb.Devices()
+	require.Error(t, err)
+	require.Len(t, devices, 0)
+	require.Equal(t, "500 Internal Server Error", err.Error())
 }
 
 func TestDevicesJSONError(t *testing.T) {
@@ -229,10 +229,10 @@ func TestDevicesJSONError(t *testing.T) {
 	defer server.Close()
 	pb := New(apiKey)
 	pb.Endpoint.URL = server.URL
-	devs, err := pb.Devices()
-	assert.Error(t, err)
-	assert.Len(t, devs, 0)
-	assert.Equal(t, mockError, err)
+	devices, err := pb.Devices()
+	require.Error(t, err)
+	require.Len(t, devices, 0)
+	require.Equal(t, mockError, err)
 }
 
 func TestMe(t *testing.T) {
@@ -241,8 +241,8 @@ func TestMe(t *testing.T) {
 	pb := New(apiKey)
 	pb.Endpoint.URL = server.URL
 	me, err := pb.Me()
-	assert.NoError(t, err)
-	assert.Equal(t, mockUser, me)
+	require.NoError(t, err)
+	require.Equal(t, mockUser, me)
 }
 
 func TestMeError(t *testing.T) {
@@ -251,8 +251,8 @@ func TestMeError(t *testing.T) {
 	pb := New(apiKey)
 	pb.Endpoint.URL = server.URL
 	_, err := pb.Me()
-	assert.Error(t, err)
-	assert.Equal(t, "500 Internal Server Error", err.Error())
+	require.Error(t, err)
+	require.Equal(t, "500 Internal Server Error", err.Error())
 }
 
 func TestMeJSONError(t *testing.T) {
@@ -261,8 +261,8 @@ func TestMeJSONError(t *testing.T) {
 	pb := New(apiKey)
 	pb.Endpoint.URL = server.URL
 	_, err := pb.Me()
-	assert.Error(t, err)
-	assert.Equal(t, mockError, err)
+	require.Error(t, err)
+	require.Equal(t, mockError, err)
 }
 
 func TestPush(t *testing.T) {
@@ -271,7 +271,7 @@ func TestPush(t *testing.T) {
 	pb := New(apiKey)
 	pb.Endpoint.URL = server.URL
 	err := pb.Push("/pushes", mockNote)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestPushError(t *testing.T) {
@@ -280,8 +280,8 @@ func TestPushError(t *testing.T) {
 	pb := New(apiKey)
 	pb.Endpoint.URL = server.URL
 	err := pb.Push("/pushes", mockNote)
-	assert.Error(t, err)
-	assert.Equal(t, "500 Internal Server Error", err.Error())
+	require.Error(t, err)
+	require.Equal(t, "500 Internal Server Error", err.Error())
 }
 
 func TestPushJSONError(t *testing.T) {
@@ -290,8 +290,8 @@ func TestPushJSONError(t *testing.T) {
 	pb := New(apiKey)
 	pb.Endpoint.URL = server.URL
 	err := pb.Push("/pushes", mockNote)
-	assert.Error(t, err)
-	assert.Equal(t, mockError, err)
+	require.Error(t, err)
+	require.Equal(t, mockError, err)
 }
 
 func TestPushLink(t *testing.T) {
@@ -300,7 +300,7 @@ func TestPushLink(t *testing.T) {
 	pb := New(apiKey)
 	pb.Endpoint.URL = server.URL
 	err := pb.PushLink(mockUser.Iden, mockLink.Title, mockLink.URL, mockLink.Body)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestPushNote(t *testing.T) {
@@ -309,7 +309,7 @@ func TestPushNote(t *testing.T) {
 	pb := New(apiKey)
 	pb.Endpoint.URL = server.URL
 	err := pb.PushNote(mockUser.Iden, mockNote.Title, mockNote.Body)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestPushLinkToChannel(t *testing.T) {
@@ -318,7 +318,7 @@ func TestPushLinkToChannel(t *testing.T) {
 	pb := New(apiKey)
 	pb.Endpoint.URL = server.URL
 	err := pb.PushLinkToChannel(mockSubscription.Channel.Tag, mockLink.Title, mockLink.URL, mockLink.Body)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestPushNoteToChannel(t *testing.T) {
@@ -327,7 +327,7 @@ func TestPushNoteToChannel(t *testing.T) {
 	pb := New(apiKey)
 	pb.Endpoint.URL = server.URL
 	err := pb.PushNoteToChannel(mockSubscription.Channel.Tag, mockNote.Title, mockNote.Body)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestPushSMS(t *testing.T) {
@@ -336,7 +336,7 @@ func TestPushSMS(t *testing.T) {
 	pb := New(apiKey)
 	pb.Endpoint.URL = server.URL
 	err := pb.PushSMS(mockSMS.SourceUserIden, mockSMS.TargetDeviceIden, mockSMS.ConversationIden, mockSMS.Message)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestSubscriptions(t *testing.T) {
@@ -346,9 +346,9 @@ func TestSubscriptions(t *testing.T) {
 	pb.Endpoint.URL = server.URL
 	mockSubscription.Client = pb
 	subs, err := pb.Subscriptions()
-	assert.NoError(t, err)
-	assert.Len(t, subs, 1)
-	assert.Equal(t, mockSubscription, subs[0])
+	require.NoError(t, err)
+	require.Len(t, subs, 1)
+	require.Equal(t, mockSubscription, subs[0])
 }
 
 func TestSubscriptionsError(t *testing.T) {
@@ -357,9 +357,9 @@ func TestSubscriptionsError(t *testing.T) {
 	pb := New(apiKey)
 	pb.Endpoint.URL = server.URL
 	subs, err := pb.Subscriptions()
-	assert.Error(t, err)
-	assert.Len(t, subs, 0)
-	assert.Equal(t, "500 Internal Server Error", err.Error())
+	require.Error(t, err)
+	require.Len(t, subs, 0)
+	require.Equal(t, "500 Internal Server Error", err.Error())
 }
 
 func TestSubscriptionsJSONError(t *testing.T) {
@@ -368,9 +368,9 @@ func TestSubscriptionsJSONError(t *testing.T) {
 	pb := New(apiKey)
 	pb.Endpoint.URL = server.URL
 	subs, err := pb.Subscriptions()
-	assert.Error(t, err)
-	assert.Len(t, subs, 0)
-	assert.Equal(t, mockError, err)
+	require.Error(t, err)
+	require.Len(t, subs, 0)
+	require.Equal(t, mockError, err)
 }
 
 func TestSubscriptionWithName(t *testing.T) {
@@ -379,9 +379,9 @@ func TestSubscriptionWithName(t *testing.T) {
 	pb := New(apiKey)
 	pb.Endpoint.URL = server.URL
 	sub, err := pb.Subscription(mockChannel.Tag)
-	assert.NoError(t, err)
-	assert.Equal(t, mockChannel.Tag, sub.Channel.Tag)
-	assert.Equal(t, pb, sub.Client)
+	require.NoError(t, err)
+	require.Equal(t, mockChannel.Tag, sub.Channel.Tag)
+	require.Equal(t, pb, sub.Client)
 }
 
 func TestSubscriptionWithNameMissing(t *testing.T) {
@@ -390,8 +390,8 @@ func TestSubscriptionWithNameMissing(t *testing.T) {
 	pb := New(apiKey)
 	pb.Endpoint.URL = server.URL
 	sub, err := pb.Subscription("MISSING")
-	assert.Error(t, err)
-	assert.Nil(t, sub)
+	require.Error(t, err)
+	require.Nil(t, sub)
 }
 
 func TestSubscriptionPushNote(t *testing.T) {
@@ -401,7 +401,7 @@ func TestSubscriptionPushNote(t *testing.T) {
 	pb.Endpoint.URL = server.URL
 	sub, _ := pb.Subscription(mockSubscription.Channel.Tag)
 	err := sub.PushNote(mockNote.Title, mockNote.Body)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestSubscriptionPushLink(t *testing.T) {
@@ -411,5 +411,5 @@ func TestSubscriptionPushLink(t *testing.T) {
 	pb.Endpoint.URL = server.URL
 	sub, _ := pb.Subscription(mockSubscription.Channel.Tag)
 	err := sub.PushLink(mockLink.Title, mockLink.URL, mockLink.Body)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }

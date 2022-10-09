@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 )
@@ -30,7 +30,7 @@ const (
 	AllDevices = ""
 )
 
-// ErrDeviceNotFound is raised when device nickname is not found on pusbullet server
+// ErrDeviceNotFound is raised when device nickname is not found on pushbullet server
 var ErrDeviceNotFound = errors.New("Device not found")
 
 // EndpointURL sets the default URL for the Pushbullet API
@@ -49,15 +49,15 @@ type Client struct {
 }
 
 // New creates a new client with your personal API key.
-func New(apikey string) *Client {
+func New(apiKey string) *Client {
 	endpoint := Endpoint{URL: EndpointURL}
-	return &Client{apikey, http.DefaultClient, endpoint}
+	return &Client{apiKey, http.DefaultClient, endpoint}
 }
 
 // NewWithClient creates a new client with your personal API key and the given http Client
-func NewWithClient(apikey string, client *http.Client) *Client {
+func NewWithClient(apiKey string, client *http.Client) *Client {
 	endpoint := Endpoint{URL: EndpointURL}
-	return &Client{apikey, client, endpoint}
+	return &Client{apiKey, client, endpoint}
 }
 
 // A Device is a PushBullet device
@@ -103,13 +103,13 @@ type subscriptionResponse struct {
 	Subscriptions []*Subscription
 }
 
-func (client *Client) buildRequest(ctx context.Context, object string, data interface{}) *http.Request {
+func (client *Client) buildRequest(ctx context.Context, object string, data any) *http.Request {
 	r, err := http.NewRequestWithContext(ctx, "GET", client.Endpoint.URL+object, nil)
 	if err != nil {
 		panic(err)
 	}
 
-	// appengine sdk requires us to set the auth header by hand
+	// AppEngine sdk requires us to set the auth header by hand
 	u := url.UserPassword(client.Key, "")
 	r.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(u.String())))
 
@@ -119,7 +119,7 @@ func (client *Client) buildRequest(ctx context.Context, object string, data inte
 		var b bytes.Buffer
 		enc := json.NewEncoder(&b)
 		_ = enc.Encode(data)
-		r.Body = ioutil.NopCloser(&b)
+		r.Body = io.NopCloser(&b)
 	}
 
 	return r
@@ -145,11 +145,11 @@ func (client *Client) DevicesWithContext(ctx context.Context) (devices []*Device
 	}()
 
 	if resp.StatusCode != http.StatusOK {
-		var errjson errorResponse
+		var errJSON errorResponse
 		dec := json.NewDecoder(resp.Body)
-		err = dec.Decode(&errjson)
+		err = dec.Decode(&errJSON)
 		if err == nil {
-			return nil, &errjson.ErrResponse
+			return nil, &errJSON.ErrResponse
 		}
 
 		return nil, errors.New(resp.Status)
@@ -260,11 +260,11 @@ func (client *Client) MeWithContext(ctx context.Context) (user *User, retErr err
 	}()
 
 	if resp.StatusCode != http.StatusOK {
-		var errjson errorResponse
+		var errJSON errorResponse
 		dec := json.NewDecoder(resp.Body)
-		err = dec.Decode(&errjson)
+		err = dec.Decode(&errJSON)
 		if err == nil {
-			return nil, &errjson.ErrResponse
+			return nil, &errJSON.ErrResponse
 		}
 
 		return nil, errors.New(resp.Status)
@@ -283,7 +283,7 @@ func (client *Client) MeWithContext(ctx context.Context) (user *User, retErr err
 // Push pushes the data to a specific device registered with PushBullet.  The
 // 'data' parameter is marshaled to JSON and sent as the request body.  Most
 // users should call one of PusNote, PushLink, PushAddress, or PushList.
-func (client *Client) Push(endPoint string, data interface{}) (retErr error) {
+func (client *Client) Push(endPoint string, data any) (retErr error) {
 	return client.PushWithContext(context.Background(), endPoint, data)
 }
 
@@ -293,7 +293,7 @@ func (client *Client) Push(endPoint string, data interface{}) (retErr error) {
 func (client *Client) PushWithContext(
 	ctx context.Context,
 	endPoint string,
-	data interface{},
+	data any,
 ) (retErr error) {
 	req := client.buildRequest(ctx, endPoint, data)
 	resp, err := client.Client.Do(req)
@@ -528,11 +528,11 @@ func (client *Client) SubscriptionsWithContext(ctx context.Context) (subscriptio
 	}()
 
 	if resp.StatusCode != http.StatusOK {
-		var errjson errorResponse
+		var errJSON errorResponse
 		dec := json.NewDecoder(resp.Body)
-		err = dec.Decode(&errjson)
+		err = dec.Decode(&errJSON)
 		if err == nil {
-			return nil, &errjson.ErrResponse
+			return nil, &errJSON.ErrResponse
 		}
 
 		return nil, errors.New(resp.Status)
