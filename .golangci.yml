@@ -4,6 +4,7 @@ linters:
   enable:
     - bodyclose
     - errcheck
+    - exportloopref
     - dupl
     - gocognit
     - goconst
@@ -11,13 +12,12 @@ linters:
     - gocyclo
     - gofmt
     - goimports
-    - golint
     - gosec
     - govet
     - lll
     - nakedret
     - prealloc
-    - scopelint
+    - revive
     - staticcheck
     - unconvert
     - unparam
